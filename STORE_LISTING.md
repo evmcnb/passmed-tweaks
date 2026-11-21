@@ -43,7 +43,9 @@ Unofficial add-on for Passmedicine: themes, hidden scores, blind blocks, cover t
 > • Export missed questions as an Anki deck, or every answer as CSV
 > • Everything stays in your browser. No accounts, no tracking, no servers.
 
-**Privacy policy URL:** host `PRIVACY.md` somewhere public (e.g. a GitHub repo or Gist) and paste its URL.
+**Privacy policy URL:** https://github.com/evmcnb/passmed-tweaks/blob/main/PRIVACY.md
+
+**Homepage / support URL:** https://github.com/evmcnb/passmed-tweaks (support: https://github.com/evmcnb/passmed-tweaks/issues)
 
 ---
 
