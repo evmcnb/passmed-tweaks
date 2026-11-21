@@ -1,6 +1,6 @@
-# Passmed Tweaks
+# Tweaks for Passmedicine
 
-Browser extension (Chrome/Edge/Brave + Firefox 128+) for passmedicine.com. Settings live in the toolbar popup and apply instantly.
+Browser extension (Chrome/Edge/Brave + Firefox 140+) for passmedicine.com. Settings live in the toolbar popup and apply instantly.
 
 ## Install
 - **Store builds:** `python build.py` makes `dist/*-chrome-*.zip` and `dist/*-firefox-*.zip`. See [STORE_LISTING.md](STORE_LISTING.md) for uploading and [PRIVACY.md](PRIVACY.md) for the privacy policy.

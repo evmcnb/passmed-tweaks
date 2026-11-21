@@ -1,8 +1,8 @@
-# Passmed Tweaks: Privacy Policy
+# Tweaks for Passmedicine: Privacy Policy
 
 _Last updated: 21 November 2026_
 
-Passmed Tweaks is an unofficial browser extension for passmedicine.com. It is not affiliated with or endorsed by Passmedicine.
+Tweaks for Passmedicine is an unofficial browser extension for passmedicine.com. It is not affiliated with or endorsed by Passmedicine.
 
 ## What it stores
 - **Your settings** (theme, toggles) in your browser's extension storage. If browser sync is on, your browser may sync these between your own devices.

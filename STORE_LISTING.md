@@ -1,13 +1,13 @@
 # Store submission kit
 
-Build first: `python build.py` → `dist/passmed-tweaks-chrome-1.0.0.zip` and `dist/passmed-tweaks-firefox-1.0.0.zip`.
+Build first: `python build.py` → `dist/tweaks-for-passmedicine-chrome-1.0.0.zip` and `dist/tweaks-for-passmedicine-firefox-1.0.0.zip`.
 Bump `version` in `manifest.json` for every update you upload.
 
 ---
 
 ## Listing text (both stores)
 
-**Name:** Passmed Tweaks
+**Name:** Tweaks for Passmedicine
 
 **Summary (≤132 chars, Chrome "short description" / Firefox "summary"):**
 Unofficial add-on for Passmedicine: themes, hidden scores, blind blocks, cover test, better comments, insights and stats.
@@ -16,7 +16,7 @@ Unofficial add-on for Passmedicine: themes, hidden scores, blind blocks, cover t
 
 **Description:**
 
-> Passmed Tweaks makes Passmedicine question practice calmer, clearer and more exam-like. Not affiliated with or endorsed by Passmedicine.
+> Tweaks for Passmedicine makes Passmedicine question practice calmer, clearer and more exam-like. Not affiliated with or endorsed by Passmedicine.
 >
 > **Look and feel**
 > • 8 themes (Midnight, OLED, Nord, Dracula, Forest, Sepia, Solarized, Mint) plus custom colours
@@ -51,7 +51,7 @@ Unofficial add-on for Passmedicine: themes, hidden scores, blind blocks, cover t
 
 ## Chrome Web Store
 1. Register at https://chrome.google.com/webstore/devconsole (one-time US$5 fee).
-2. **New item** → upload `dist/passmed-tweaks-chrome-1.0.0.zip`.
+2. **New item** → upload `dist/tweaks-for-passmedicine-chrome-1.0.0.zip`.
 3. **Store listing:** paste the text above; upload images:
    - Store icon 128×128: `icons/128.png`
    - Screenshots 1280×800: `store/out/screenshot-1.png` … `screenshot-5.png`
@@ -68,9 +68,9 @@ Unofficial add-on for Passmedicine: themes, hidden scores, blind blocks, cover t
 ## Firefox Add-ons (AMO)
 1. Sign in at https://addons.mozilla.org/developers/ → **Submit a New Add-on**.
 2. Choose **On this site** (public listing) or **On your own** (signed .xpi just for you, issued in minutes, permanent install).
-3. Upload `dist/passmed-tweaks-firefox-1.0.0.zip`. It passes `web-ext lint` with 0 errors/warnings.
+3. Upload `dist/tweaks-for-passmedicine-firefox-1.0.0.zip`. It passes `web-ext lint` with 0 errors/warnings.
 4. "Do you need to submit source code?" **No.** The code isn't minified or bundled.
 5. Paste the listing text, add screenshots (`store/out/screenshot-*.png`), set the privacy policy URL, licence (e.g. MIT), and submit.
 
 ## Naming note
-Both stores can reject a name that suggests it's official. The "Unofficial… Not affiliated with Passmedicine" lines are there for that reason. If a reviewer still objects, rename to "Tweaks for Passmedicine" in `manifest.json` and rebuild.
+The name follows the "X for Y" pattern both stores accept for third-party tools, and the description says it's unofficial and not affiliated with Passmedicine. Keep both if you edit the listing.

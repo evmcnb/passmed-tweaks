@@ -1,4 +1,4 @@
-"""Build store-ready zips: python build.py  ->  dist/passmed-tweaks-<browser>-<version>.zip
+"""Build store-ready zips: python build.py  ->  dist/tweaks-for-passmedicine-<browser>-<version>.zip
 
 Chrome gets the manifest without Firefox's browser_specific_settings; Firefox gets it as-is.
 Uses zipfile (forward-slash paths), which both stores require.
@@ -16,7 +16,7 @@ chrome['minimum_chrome_version'] = '111'  # content_scripts "world": "MAIN"
 
 (ROOT / 'dist').mkdir(exist_ok=True)
 for browser, m in (('chrome', chrome), ('firefox', manifest)):
-    out = ROOT / 'dist' / f"passmed-tweaks-{browser}-{manifest['version']}.zip"
+    out = ROOT / 'dist' / f"tweaks-for-passmedicine-{browser}-{manifest['version']}.zip"
     with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
         z.writestr('manifest.json', json.dumps(m, indent=2))
         for f in FILES:

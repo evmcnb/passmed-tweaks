@@ -487,7 +487,7 @@
           if (ref instanceof Element) refCell.append(...[...ref.cloneNode(true).childNodes]);
           else refCell.textContent = ref || '–';
           refCell.classList.add('pmt-ref-added');
-          refCell.title = 'Reference range added by Passmed Tweaks';
+          refCell.title = 'Reference range added by Tweaks for Passmedicine';
         }
         refCell.classList.add('pmt-ref');
         if (!S.labFlags) continue;
