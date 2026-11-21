@@ -1,0 +1,174 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Store screenshots</title>
+<!-- Mock pages for store images. All question text is invented sample content. Render: python store/render.py -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="../src/content.css">
+<style>
+  html, body { margin: 0; width: 1280px; height: 800px; overflow: hidden; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; }
+  #cap {
+    position: absolute; inset: 0 auto 0 0; width: 400px; padding: 64px 44px; box-sizing: border-box; z-index: 5;
+    background: linear-gradient(160deg, #1e5fe0, #20a8c8) !important; color: #fff !important;
+  }
+  #cap img { width: 64px; height: 64px; border-radius: 14px; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+  #cap .brand { font: 600 15px/1 "Segoe UI", sans-serif; opacity: .85; margin: 18px 0 40px; letter-spacing: .02em; }
+  #cap h1 { font: 700 40px/1.12 "Segoe UI", sans-serif; margin: 0 0 22px; color: #fff !important; }
+  #cap ul { list-style: none; padding: 0; margin: 0; font-size: 18px; line-height: 1.45; }
+  #cap li { margin: 0 0 14px; padding-left: 26px; position: relative; color: #fff !important; }
+  #cap li::before { content: ""; position: absolute; left: 0; top: 8px; width: 12px; height: 7px; border: solid #fff; border-width: 0 0 3px 3px; transform: rotate(-45deg); }
+  #cap .foot { position: absolute; bottom: 36px; left: 44px; font-size: 12px; opacity: .7; }
+  #stage { position: absolute; left: 400px; top: 0; right: 0; bottom: 0; padding: 40px 36px; box-sizing: border-box; background: #dfe6ee !important; }
+  .frame { height: 100%; border-radius: 12px; overflow: hidden; box-shadow: 0 18px 50px rgba(15, 30, 60, .28); display: flex; flex-direction: column; position: relative; }
+  .bar { height: 34px; flex: none; background: #2a2d33 !important; display: flex; align-items: center; gap: 7px; padding: 0 14px; }
+  .bar i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .bar i:nth-child(1) { background: #ff5f57; } .bar i:nth-child(2) { background: #febc2e; } .bar i:nth-child(3) { background: #28c840; }
+  .bar span { margin-left: 14px; flex: 1; height: 20px; border-radius: 6px; background: #3b3f47 !important; color: #b8bec9 !important; font: 12px/20px "Segoe UI", sans-serif; padding-left: 10px; }
+  .page { flex: 1; overflow: hidden; background: var(--pmt-bg, #fff); color: var(--pmt-text, #212529); padding: 14px 22px; position: relative; font-size: 14px; }
+  .page .list-group-item { padding-top: 7px; padding-bottom: 7px; }
+  .page .row { flex-wrap: nowrap; }
+  #div_question_nav { display: flex; justify-content: space-between; align-items: center; padding: 6px 0 10px; border-bottom: 2px solid var(--pmt-border, #ddd); margin-bottom: 12px; font-weight: 500; position: static; }
+  .navdot { width: 26px; height: 26px; border-radius: 50%; background: var(--pmt-accent, #0d6efd); color: var(--pmt-bg, #fff); display: inline-grid; place-items: center; font: 700 16px/1 "Segoe UI", sans-serif; }
+  #pmt-dock { position: absolute !important; }
+  .vote { color: var(--pmt-muted, #888); font-size: 13px; margin-left: 6px; }
+  .mini h6 { font-size: 12px; }
+  /* blur demo for hidden score */
+  .scorebox { font-size: 13px; }
+</style>
+</head>
+<body>
+<div id="cap">
+  <img src="../icons/128.png" alt="">
+  <div class="brand">PASSMED TWEAKS</div>
+  <h1 id="title"></h1>
+  <ul id="points"></ul>
+  <div class="foot">Unofficial. Not affiliated with Passmedicine.</div>
+</div>
+<div id="stage"><div class="frame"><div class="bar"><i></i><i></i><i></i><span>passmedicine.com</span></div><div class="page" id="page"></div></div></div>
+
+<template id="t-question">
+  <div class="row">
+    <div class="col-8">
+      <div id="div_question_nav"><span class="navdot">&#8249;</span><span>Question 12 of 40</span><span class="scorebox" id="navTickCross"></span><span class="navdot">&#8250;</span></div>
+      <div id="div_question">
+        <span id="question_only">A 58-year-old man attends clinic with three months of fatigue and itch. He drinks little alcohol and takes no regular medicines. His sclerae are mildly yellow.<br><br>Blood tests show:<br>
+          <div class="table-responsive"><table class="tb pmt-table pmt-lab"><thead><tr><th>Test</th><th>Result</th><th>Reference</th></tr></thead><tbody>
+            <tr><td>Bilirubin</td><td>41 µmol/L</td><td class="pmt-ref">(3 - 17)</td></tr>
+            <tr><td>ALP</td><td>390 u/L</td><td class="pmt-ref">(30 - 100)</td></tr>
+            <tr><td>ALT</td><td>52 u/L</td><td class="pmt-ref pmt-ref-added">3-40 iu/L</td></tr>
+            <tr><td>Albumin</td><td>37 g/L</td><td class="pmt-ref pmt-ref-added">35-50 g/L</td></tr>
+          </tbody></table></div>
+          Which investigation is most likely to confirm the diagnosis?</span><br><br>
+        <div class="list-group" id="opts"></div>
+        <div id="after"></div>
+      </div>
+    </div>
+    <div class="col-4" id="side"></div>
+  </div>
+</template>
+
+<script>
+const OPTS = ['Anti-mitochondrial antibodies', 'Anti-smooth muscle antibodies', 'Liver ultrasound', 'MRCP', 'Serum ferritin'];
+const PEER = [58, 6, 14, 17, 5];
+const THEMES = {
+  midnight: { dark: true, bg: '#0f172a', surface: '#1e293b', text: '#e2e8f0', accent: '#38bdf8' },
+  sepia: { dark: false, bg: '#f4ecd8', surface: '#fbf6e9', text: '#3b2f22', accent: '#a0522d' },
+  nord: { dark: true, bg: '#2e3440', surface: '#3b4252', text: '#eceff4', accent: '#88c0d0' },
+  mint: { dark: false, bg: '#eef6f2', surface: '#ffffff', text: '#1f2d27', accent: '#0f9d76' },
+};
+const $ = (s) => document.querySelector(s);
+function theme(name, extra = []) {
+  const t = THEMES[name], r = document.documentElement;
+  r.classList.add('pmt-theme', 'pmt-polish', ...extra);
+  if (t.dark) r.classList.add('pmt-dark');
+  r.setAttribute('data-bs-theme', t.dark ? 'dark' : 'light');
+  for (const k of ['bg', 'surface', 'text', 'accent']) r.style.setProperty('--pmt-' + k, t[k]);
+  r.style.setProperty('--pmt-accent-text', t.dark ? '#111' : '#fff');
+}
+function caption(title, points) {
+  $('#title').textContent = title;
+  $('#points').replaceChildren(...points.map((p) => Object.assign(document.createElement('li'), { textContent: p })));
+}
+function question({ answered, pick = 0 }) {
+  $('#page').append($('#t-question').content.cloneNode(true));
+  $('#opts').innerHTML = OPTS.map((o, i) => {
+    const n = i + 1, correct = n === 1, picked = n === pick;
+    if (!answered) return `<label class="list-group-item" id="BOFoption${n}"><input type="radio" class="form-check-input" style="margin-right:16px"> ${o}</label>`;
+    const bar = correct ? 'greenbar' : picked ? 'redbar' : 'greybar';
+    const edge = correct ? 'green' : picked ? 'red' : 'white';
+    const badge = correct ? 'bg-success' : picked ? 'bg-danger' : 'bg-secondary';
+    return `<a id="BOFoption${n}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style="background-image:url(x/${bar}.png);background-repeat:repeat-y;background-size:${PEER[i]}%;border-left:thick solid ${edge}"><span>${o}</span><span class="score-badge badge rounded-pill ${badge}">${PEER[i]}%</span></a>`;
+  }).join('');
+}
+function side(cards) {
+  $('#side').innerHTML = cards.map(([title, body, collapsed]) => `<div class="card card-pm-blue mb-3 ${collapsed ? 'pmt-card-collapsed' : ''}"><div class="card-header pmt-card-head"><b>${title}</b><button class="pmt-collapse"></button></div><div class="card-body">${body}</div></div>`).join('');
+}
+const chip = (ok) => `<span class="pmt-chip ${ok ? 'pmt-chip-ok' : 'pmt-chip-bad'}">${ok ? '✓' : '✗'}</span>`;
+const insights = (pickWrong) => `<div id="pmt-insights"><div class="pmt-head"><span>Insights</span><button class="pmt-link">2231_B_14</button></div>
+  <div class="pmt-stats"><div class="pmt-stat"><span class="pmt-stat-v">7,904</span><span class="pmt-stat-l">attempts</span></div><div class="pmt-stat"><span class="pmt-stat-v">58%</span><span class="pmt-stat-l">peers correct</span></div><div class="pmt-stat pmt-d-mod"><span class="pmt-stat-v">Moderate</span><span class="pmt-stat-l">difficulty</span></div><div class="pmt-stat"><span class="pmt-stat-v">91%</span><span class="pmt-stat-l">liked</span></div></div>
+  ${pickWrong ? '<div class="pmt-bad">✗ 17% of people also picked <b>MRCP</b>.</div><div>Most common wrong answer: <b>MRCP</b> (17%)</div>' : '<div class="pmt-ok">✓ Correct. 42% of people got this wrong.</div><div>Most common wrong answer: <b>MRCP</b> (17%)</div>'}
+  <div class="pmt-hist">Your history with this concept: ${chip(false)}${chip(true)}${chip(true)}</div>
+  <details class="pmt-explain" open><summary>Concept explanation</summary><div>Cholestatic liver blood tests in a middle-aged patient with itch point to <b>primary biliary cholangitis</b>. Anti-mitochondrial antibodies are positive in the vast majority, so they confirm the diagnosis without imaging.</div></details></div>`;
+
+const SHOTS = {
+  1() {
+    theme('midnight');
+    caption('Themes that are easy on the eyes', ['8 themes plus your own colours', 'Cleaner results tables with a reference column', 'Font, text size, wide and focus layouts']);
+    question({ answered: false });
+    $('#after').innerHTML = '<button class="btn btn-primary mt-3">Submit answer</button>';
+    side([['Reference ranges', '<div class="small">Sodium 135-145 mmol/L<br>Potassium 3.5-5.0 mmol/L<br>Bilirubin 3-17 µmol/L</div>'], ['Textbooks', '<span class="badge text-bg-light">High-yield textbook</span>', true], ['Dashboard', '<div class="small">1 ✓<br>2 ✓<br>3 ✗</div>', true]]);
+  },
+  2() {
+    theme('sepia');
+    caption('Learn more from every question', ['How many people got it right, and how hard it is', 'The most common wrong answer', 'Your history with the concept, plus the full explanation']);
+    question({ answered: true, pick: 4 });
+    $('#navTickCross').innerHTML = '<span style="color:#c0392b;font-weight:700">✗</span>';
+    $('#question_only').innerHTML = 'A 58-year-old man has three months of fatigue and itch, with cholestatic liver blood tests. Which investigation is most likely to confirm the diagnosis?';
+    $('#after').innerHTML = insights(true);
+    side([['UKMLA Content Map', '<div class="small">Jaundice · Pruritus<br>Chronic liver disease</div>'], ['Textbooks', '', true]]);
+  },
+  3() {
+    theme('nord');
+    caption('Comments you can actually follow', ['Clear reply chains with names and dates', 'Sort by top, newest or most replies', 'Search, hide low-scored threads, Ctrl+Enter to post']);
+    const av = (n, h) => `<span class="pmt-av ${n === '?' ? 'pmt-av-anon' : ''}" style="--h:${h}">${n}</span>`;
+    const foot = (s) => `<h6 class="text-end"><span class="vote">▲</span> <b>${s}</b> <span class="vote">▼</span></h6>`;
+    const reply = (n, h, who, to, when, text, s, badge = '') => `<div class="pmt-reply"><div class="pmt-chead">${av(n, h)}<b class="pmt-author">${who}</b>${badge}<span class="pmt-to">↳ ${to}</span><span class="pmt-date">${when}</span></div><p>${text}</p>${foot(s)}</div>`;
+    $('#page').innerHTML = `<div style="max-width:640px;margin:0 auto"><h5 style="margin:4px 0 12px">Discuss (14)</h5>
+      <div class="pmt-cbar"><select class="form-select form-select-sm"><option>Top</option></select><input class="form-control form-control-sm" placeholder="Search comments…"><button class="btn btn-sm btn-outline-secondary">Toggle replies</button><span class="pmt-cinfo">9 threads</span></div>
+      <div class="pmt-thread"><div style="border-left:4px solid #0DCAF0"><div class="pmt-chead">${av('LM', 210)}<b class="pmt-author">LiverMoss</b><span class="pmt-date">2 years ago</span></div>Memory aid: AMA for PBC, think "A Middle-aged woman with Anti-mitochondrial antibodies".${foot(212)}</div>
+        <div class="pmt-ttools"><button class="pmt-link">3 replies</button><button class="pmt-link">Reply</button></div>
+        <div class="pmt-replies">${reply('KD', 140, 'kdoc', 'LiverMoss', '1 year ago', 'Worth adding PSC is the one with ulcerative colitis and p-ANCA.', 48)}${reply('LM', 210, 'LiverMoss', 'LiverMoss', '1 year ago', 'Good shout, and MRCP is how you confirm PSC.', 31, '<span class="pmt-badge">OP</span>')}${reply('?', 0, 'Anonymous', 'LiverMoss', '3 months ago', 'This finally made it stick, thanks.', 6)}</div></div>
+      <div class="pmt-thread"><div style="border-left:4px solid #0DCAF0"><div class="pmt-chead">${av('F2', 30)}<b class="pmt-author">FY2 Sam</b><span class="pmt-date">5 months ago</span></div>Ultrasound first in real life to rule out obstruction, but the question asks what confirms it.${foot(27)}</div>
+        <div class="pmt-ttools"><button class="pmt-link">Reply</button></div></div></div>`;
+  },
+  4() {
+    theme('mint', ['pmt-cover-on']);
+    caption('Practise like the real exam', ['Cover test: answer before seeing the options', 'Blind blocks: no feedback until you review', 'Hidden scores, timer and pace alert']);
+    question({ answered: false });
+    $('#opts').style.display = 'none';
+    $('#opts').insertAdjacentHTML('beforebegin', `<div id="pmt-cover"><div class="pmt-cover-t">Cover test: what's your answer?</div><input class="form-control" value="Anti-mitochondrial antibodies"><div class="pmt-cover-row"><button class="btn btn-primary btn-sm">Show options</button><small>Enter to reveal</small></div></div>`);
+    side([['Dashboard', '<div class="small" style="filter:blur(6px)">Score: 74%<br>1 ✓ 2 ✓ 3 ✗ 4 ✓</div>']]);
+    $('#page').insertAdjacentHTML('beforeend', `<div id="pmt-dock"><span class="pmt-block">Blind block 7/10 <button class="pmt-dock-btn">Reveal now</button></span><span class="pmt-timer pmt-slow">⏱ 1:38 · Σ 21:05</span></div>`);
+  },
+  5() {
+    caption('Your stats, kept on your device', ['Accuracy compared with everyone else, by topic and day', 'The topics you keep missing', 'Export missed questions to Anki, or everything to CSV']);
+    $('#page').style.padding = '0';
+    $('.bar span').textContent = 'Passmed Tweaks: My stats';
+    $('#page').innerHTML = '<iframe src="stats-sample.html" style="border:0;width:100%;height:100%"></iframe>';
+  },
+  promo() {
+    document.body.innerHTML = `<div style="width:440px;height:280px;box-sizing:border-box;padding:34px;background:linear-gradient(150deg,#1e5fe0,#20a8c8);color:#fff;font-family:'Segoe UI',sans-serif;position:relative;overflow:hidden">
+      <img src="../icons/128.png" style="width:72px;height:72px;border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.25)">
+      <div style="font:700 34px/1.1 'Segoe UI';margin-top:20px">Passmed Tweaks</div>
+      <div style="font-size:16px;opacity:.92;margin-top:10px">Themes · Blind blocks · Cover test<br>Insights · Better comments · Stats</div>
+      <div style="position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.08)"></div></div>`;
+    document.documentElement.style.cssText = 'width:440px;height:280px';
+    document.body.style.cssText = 'width:440px;height:280px;margin:0';
+  },
+};
+(SHOTS[new URLSearchParams(location.search).get('s')] || SHOTS[1])();
+</script>
+</body>
+</html>
