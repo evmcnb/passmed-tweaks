@@ -1,0 +1,69 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Textbook contrast harness</title>
+<!-- Serve the repo root (python -m http.server 8765) and open /test/textbook-harness.html?theme=midnight
+     Mimics textbook markup using the site's own hard-coded classes (from custom18.css) plus typical inline colours.
+     window.pmtReport() lists every text element below 3:1 contrast. -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+<style>
+  /* the site's own rules that cause trouble under themes (copied from custom18.css) */
+  .tb { background: #ffffe0; border: 1px solid #999; border-collapse: collapse; }
+  .table-striped tbody tr:nth-child(even) td { background: #f9f9f9; }
+  .table-striped tbody tr:nth-child(odd) td { background: #ffffff; }
+  .table-striped tr:first-child th { background-color: #d9edf7; }
+  .imagetext { color: #777; background-color: #f8f8f8; padding: 5px; }
+  .blue-panel { background-color: #d9edf7; }
+  .yellow-panel { background-color: #fcf8e3; }
+  .titlebar { background-color: #f4f4f4; }
+  .concept-1 { background-color: #ffebeb; } .concept-2 { background-color: #fff5c6; } .concept-3 { background-color: #e6ffc0; }
+  .highlighted-notes { background-color: yellow; }
+  .notes-title, .notes-heading { color: #1a9cce; }
+</style>
+<link rel="stylesheet" href="../src/content.css">
+</head>
+<body>
+<div class="container py-3" id="main_container">
+  <div id="passmedicinenotes">
+    <div class="titlebar p-2"><h4 class="notes-title">Primary biliary cholangitis</h4></div>
+    <p>Plain paragraph text. <span style="color:#000080">Navy inline span.</span> <font color="black">Font tag black.</font> <span style="background:yellow">Highlighted with yellow.</span> <span style="color:#d9534f">Red emphasis.</span></p>
+    <div style="background:#ffffff;padding:8px">White inline box with inherited text.</div>
+    <p class="text-dark">Bootstrap text-dark paragraph.</p>
+    <div class="blue-panel p-2">Blue panel: key point text.</div>
+    <div class="yellow-panel p-2">Yellow panel: exam tip text.</div>
+    <div class="concept-1 p-1">Concept 1 box</div><div class="concept-2 p-1">Concept 2 box</div><div class="concept-3 p-1">Concept 3 box</div>
+    <p><span class="highlighted-notes">Highlighted notes span</span></p>
+    <h5 class="notes-heading">Investigations</h5>
+    <table class="tb"><tr><td>Anti-mitochondrial antibodies</td><td>positive in 98%</td></tr><tr><td>IgM</td><td>raised</td></tr></table>
+    <table class="table table-striped"><tr><th>Header</th><th>Header 2</th></tr><tr><td>Row 1</td><td>a</td></tr><tr><td>Row 2</td><td>b</td></tr></table>
+    <img alt="diagram" width="120" height="60" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cpath d='M5 55 L60 5 L115 55' stroke='black' stroke-width='3' fill='none'/%3E%3C/svg%3E">
+    <div class="imagetext">Image caption text</div>
+    <p><span style="color:white">White text written for a dark banner.</span></p>
+  </div>
+</div>
+<script>
+const theme = new URLSearchParams(location.search).get('theme') || 'midnight';
+window.chrome = { storage: {
+  sync: { get: (d, cb) => cb({ ...d, theme }), set() {} },
+  local: { get: (d, cb) => cb(d), set: (o, cb) => cb && cb() },
+  onChanged: { addListener() {} },
+} };
+window.pmtReport = () => {
+  const lum = (s) => { const m = s.match(/-?[\d.]+(e-?\d+)?/g).map(Number); if (s.startsWith('color(')) [0, 1, 2].forEach((i) => { m[i] *= 255; }); const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return { L: 0.2126 * f(m[0]) + 0.7152 * f(m[1]) + 0.0722 * f(m[2]), a: m[3] ?? 1 }; };
+  const bgOf = (el) => { for (let n = el; n; n = n.parentElement) { const c = lum(getComputedStyle(n).backgroundColor); if (c.a >= 0.5) return c.L; } return 1; };
+  const bad = [];
+  document.querySelectorAll('#passmedicinenotes *').forEach((el) => {
+    const own = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
+    if (!own) return;
+    const a = lum(getComputedStyle(el).color).L, b = bgOf(el);
+    const c = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    if (c < 3) bad.push(`${c.toFixed(2)} ${el.tagName.toLowerCase()}${el.className ? '.' + el.className : ''}: ${el.textContent.trim().slice(0, 40)}`);
+  });
+  return bad;
+};
+</script>
+<script src="../src/shared.js"></script>
+<script src="../src/content.js"></script>
+</body>
+</html>

@@ -38,6 +38,74 @@
     }
     root.style.setProperty('--pmt-font', PMT_FONTS[S.font] || 'inherit');
     root.style.setProperty('--pmt-scale', (S.fontScale || 100) / 100);
+    resetContrast(); // theme changed: undo earlier fixes, refresh() re-checks against the new colours
+  }
+
+  // ---------- contrast safety net ----------
+  // Textbook/notes HTML carries its own colours (inline styles, <font color>, highlights) written
+  // for a white page. For elements that set a colour, check the text against what's actually behind
+  // it and, only if unreadable, switch it to near-black/near-white. The original is kept for undo.
+  const COLOURED = '[style*="color"], [style*="background"], font[color], [bgcolor], .text-white, .text-light, .text-dark, .text-black, .text-body, .text-secondary';
+  // Computed colours are "rgb(r, g, b[, a])" (0-255) or, for color-mix() results, "color(srgb r g b[ / a])" (0-1).
+  function rgba(s) {
+    s = String(s);
+    const m = (s.match(/-?[\d.]+(e-?\d+)?/g) || []).map(Number);
+    const k = s.startsWith('color(') ? 255 : 1;
+    return { r: (m[0] || 0) * k, g: (m[1] || 0) * k, b: (m[2] || 0) * k, a: m[3] === undefined ? 1 : m[3] };
+  }
+  const relLum = ({ r, g, b }) => {
+    const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+  };
+  const contrast = (a, b) => { const [x, y] = [relLum(a), relLum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  function backdrop(el) {
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+      const c = rgba(getComputedStyle(n).backgroundColor);
+      if (c.a >= 0.5) return c;
+    }
+    return rgba(getComputedStyle(document.body).backgroundColor);
+  }
+  function fixContrast() {
+    if (!root.classList.contains('pmt-theme') || !document.body) return;
+    document.querySelectorAll(`:is(${COLOURED}):not([data-pmt-c])`).forEach((el) => {
+      if (el.closest('.pmt-own, #cap, svg')) return;
+      el.dataset.pmtC = el.style.getPropertyValue('color') + '|' + el.style.getPropertyPriority('color');
+      // dark themes: white/light-grey boxes are just "page" containers written for a white site;
+      // drop them (coloured highlights such as yellow are kept)
+      if (root.classList.contains('pmt-dark') && el.tagName !== 'IMG' && (el.style.background || el.style.backgroundColor || el.hasAttribute('bgcolor'))) {
+        const own = rgba(getComputedStyle(el).backgroundColor);
+        if (own.a >= 0.5 && relLum(own) > 0.8 && Math.max(own.r, own.g, own.b) - Math.min(own.r, own.g, own.b) < 24) {
+          el.dataset.pmtBg = el.style.getPropertyValue('background-color') + '|' + el.style.getPropertyPriority('background-color');
+          el.style.setProperty('background-color', 'transparent', 'important');
+        }
+      }
+      if (!el.textContent.trim()) return;
+      const fg = rgba(getComputedStyle(el).color), bg = backdrop(el);
+      if (fg.a < 0.3 || contrast(fg, bg) >= 3) return;
+      // keep the hue (red stays red): blend toward white on dark backdrops, black on light, until readable
+      const to = relLum(bg) > 0.35 ? 0 : 255;
+      let c = fg;
+      for (let t = 0.15; t <= 1.001 && contrast(c, bg) < 3.5; t += 0.15) {
+        c = { r: fg.r + (to - fg.r) * t, g: fg.g + (to - fg.g) * t, b: fg.b + (to - fg.b) * t };
+      }
+      el.style.setProperty('color', `rgb(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)})`, 'important');
+      el.dataset.pmtFixed = '1';
+    });
+  }
+  function resetContrast() {
+    document.querySelectorAll('[data-pmt-c]').forEach((el) => {
+      if (el.dataset.pmtFixed) {
+        const [val, prio] = el.dataset.pmtC.split('|');
+        if (val) el.style.setProperty('color', val, prio); else el.style.removeProperty('color');
+      }
+      if (el.dataset.pmtBg !== undefined) {
+        const [val, prio] = el.dataset.pmtBg.split('|');
+        if (val) el.style.setProperty('background-color', val, prio); else el.style.removeProperty('background-color');
+      }
+      delete el.dataset.pmtC;
+      delete el.dataset.pmtFixed;
+      delete el.dataset.pmtBg;
+    });
   }
 
   // ---------- data from hook.js ----------
@@ -119,6 +187,7 @@
       enhanceCards();
     }
     enhanceTables();
+    fixContrast();
     enhanceReviewList();
     const box = document.getElementById('div_discuss_question_content');
     if (box) enhanceComments(box);
@@ -472,7 +541,7 @@
 
   function enhanceTables() {
     if (!S.labTables) return;
-    document.querySelectorAll('#question_only table, #notecontent table, .pmt-expl table, #ref_range table, #pmt-insights table').forEach((t) => {
+    document.querySelectorAll('#question_only table, #notecontent table, .pmt-expl table, #ref_range table, #pmt-insights table, #passmedicinenotes table, #et_output table, .tb-results table').forEach((t) => {
       if (t.classList.contains('pmt-table')) return;
       t.classList.add('pmt-table');
       if (!t.closest('#question_only')) return; // only results tables in the stem get the reference column

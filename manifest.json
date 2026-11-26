@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tweaks for Passmedicine",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Unofficial add-on for Passmedicine: themes, score hiding, blind blocks, cover test, better comments, question insights and stats.",
   "permissions": ["storage"],
   "action": {

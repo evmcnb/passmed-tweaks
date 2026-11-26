@@ -1,7 +1,7 @@
 /* ================= Themes ================= */
 html.pmt-theme {
   --pmt-surface2: color-mix(in srgb, var(--pmt-surface) 88%, var(--pmt-text));
-  --pmt-muted: color-mix(in srgb, var(--pmt-text) 62%, var(--pmt-bg));
+  --pmt-muted: color-mix(in srgb, var(--pmt-text) 75%, var(--pmt-bg));
   --pmt-border: color-mix(in srgb, var(--pmt-text) 16%, var(--pmt-surface));
   --bs-body-bg: var(--pmt-bg);
   --bs-body-color: var(--pmt-text);
@@ -95,6 +95,31 @@ html.pmt-theme svg.bi { fill: currentColor; }
 html.pmt-theme :is(.btn-ruleout, .ai-btn-ruleout)::before { color: var(--pmt-muted) !important; transition: color .15s; }
 html.pmt-theme :is(.btn-ruleout, .ai-btn-ruleout):hover::before { color: #dc2626 !important; }
 html.pmt-theme :is(.strikethrough, .ai-strikethrough) { color: var(--pmt-muted); }
+
+/* ---- Textbook & notes: the site hard-codes pale boxes (custom CSS) that keep their light
+   background while our theme text colour inherits into them. Re-tint each from the theme. ---- */
+html.pmt-theme :is(#passmedicinenotes, #et_title_header, #et_output, .tb-results, .titlebar, .boftd, .psa-scenario, .psa-question) {
+  background-color: var(--pmt-surface) !important; color: var(--pmt-text) !important;
+}
+html.pmt-theme .titlebar { background-color: var(--pmt-surface2) !important; }
+html.pmt-theme .tb, html.pmt-theme .tb td, html.pmt-theme .tb th { background: var(--pmt-surface) !important; color: var(--pmt-text) !important; border-color: var(--pmt-border) !important; }
+html.pmt-theme :is(.table-striped, .table-striped2) > tbody > tr > td { background: transparent !important; color: var(--pmt-text) !important; }
+html.pmt-theme :is(.table-striped, .table-striped2) > tbody > tr:nth-child(even) > td { background: color-mix(in srgb, var(--pmt-text) 4%, transparent) !important; }
+html.pmt-theme .table-striped tr:first-child th { background: var(--pmt-surface2) !important; color: var(--pmt-text) !important; }
+html.pmt-theme .blue-panel { background-color: color-mix(in srgb, #3b82f6 16%, var(--pmt-surface)) !important; color: var(--pmt-text) !important; }
+html.pmt-theme .yellow-panel { background-color: color-mix(in srgb, #eab308 16%, var(--pmt-surface)) !important; color: var(--pmt-text) !important; }
+html.pmt-theme .concept-1 { background-color: color-mix(in srgb, #ef4444 16%, var(--pmt-surface)) !important; color: var(--pmt-text) !important; }
+html.pmt-theme .concept-2 { background-color: color-mix(in srgb, #eab308 18%, var(--pmt-surface)) !important; color: var(--pmt-text) !important; }
+html.pmt-theme .concept-3 { background-color: color-mix(in srgb, #22c55e 16%, var(--pmt-surface)) !important; color: var(--pmt-text) !important; }
+html.pmt-theme .highlighted-notes { background-color: color-mix(in srgb, #facc15 38%, var(--pmt-surface)) !important; color: var(--pmt-text) !important; }
+html.pmt-theme .imagetext { background-color: var(--pmt-surface2) !important; color: var(--pmt-muted) !important; }
+html.pmt-theme :is(.notes-title, .notes-heading) { color: var(--pmt-accent) !important; }
+html.pmt-theme.pmt-dark :is(.text-dark, .text-black, .text-body-emphasis) { color: var(--pmt-text) !important; }
+/* diagrams and transparent images are drawn for a white page: give them one on dark themes */
+html.pmt-theme.pmt-dark :is(#passmedicinenotes, #et_output, .tb-results, #notecontent, .pmt-expl, .modal-body, #main_container) :is(img:not(.pmt-av), .mermaid svg, svg[id^="mermaid"]) {
+  background-color: #fff; border-radius: 6px;
+}
+html.pmt-theme.pmt-dark :is(.mermaid svg, svg[id^="mermaid"]) { padding: 6px; }
 
 /* ================= UI polish ================= */
 html.pmt-polish #div_question .list-group { gap: 6px; }
