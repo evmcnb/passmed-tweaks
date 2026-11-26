@@ -75,23 +75,45 @@
   const KEEP_BG = '.btn, button, .badge, .form-control, .form-select, .progress, .progress-bar, .alert, [class*="-100"], .pmt-own';
   const neutral = (c) => Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) < 24;
   let checked = new WeakSet();
+  const save = (el, key, prop) => { if (el.dataset[key] === undefined) el.dataset[key] = el.style.getPropertyValue(prop) + '|' + el.style.getPropertyPriority(prop); };
+  const LIGHT_STOP = /rgba?\([^)]*\)|color\([^)]*\)/g;
+  // Dark themes: pastel boxes and progress bars (category bars, highlights) are re-tinted to a dark
+  // version of the same hue; plain white/grey ones are dropped. Done whether or not they hold text,
+  // because bars are often empty elements sitting behind the text.
+  function darkenPastels(el, cs, ownBg) {
+    if (el.matches(KEEP_BG)) return;
+    if (ownBg.a >= 0.5 && relLum(ownBg) > 0.55) {
+      save(el, 'pmtBg', 'background-color');
+      el.style.setProperty('background-color', neutral(ownBg) ? 'transparent'
+        : `color-mix(in srgb, rgb(${ownBg.r}, ${ownBg.g}, ${ownBg.b}) 30%, var(--pmt-surface))`, 'important');
+    }
+    if (cs.backgroundImage.includes('gradient(')) {
+      const img = cs.backgroundImage.replace(LIGHT_STOP, (c) => {
+        const v = rgba(c);
+        return v.a > 0.05 && relLum(v) > 0.55 ? `color-mix(in srgb, rgb(${Math.round(v.r)}, ${Math.round(v.g)}, ${Math.round(v.b)}) 30%, var(--pmt-surface))` : c;
+      });
+      if (img !== cs.backgroundImage) { save(el, 'pmtBgi', 'background-image'); el.style.setProperty('background-image', img, 'important'); }
+    }
+  }
   function fixContrast() {
     if (!root.classList.contains('pmt-theme') || !document.body) return;
+    const dark = root.classList.contains('pmt-dark');
     for (const el of document.body.getElementsByTagName('*')) {
       if (checked.has(el)) continue;
       checked.add(el);
       if (SKIP_TAGS.has(el.tagName.toUpperCase()) || el.closest('.pmt-own, svg')) continue;
       const cs = getComputedStyle(el);
       const ownBg = rgba(cs.backgroundColor);
+      if (dark) darkenPastels(el, cs, ownBg);
       const hasBg = ownBg.a >= 0.5 && cs.backgroundImage === 'none';
       if (!hasBg && !el.matches(COLOURED)) continue;
       if (!el.textContent.trim()) continue;
       const fg = rgba(cs.color);
-      let bg = hasBg ? ownBg : backdrop(el.parentElement);
+      let bg = backdrop(el);
       if (fg.a < 0.3 || contrast(fg, bg) >= 3) continue;
-      el.dataset.pmtC = el.style.getPropertyValue('color') + '|' + el.style.getPropertyPriority('color');
-      if (hasBg && neutral(ownBg) && !el.matches(KEEP_BG)) {
-        el.dataset.pmtBg = el.style.getPropertyValue('background-color') + '|' + el.style.getPropertyPriority('background-color');
+      save(el, 'pmtC', 'color');
+      if (hasBg && neutral(rgba(getComputedStyle(el).backgroundColor)) && !el.matches(KEEP_BG)) {
+        save(el, 'pmtBg', 'background-color');
         el.style.setProperty('background-color', 'transparent', 'important');
         bg = backdrop(el.parentElement);
         if (contrast(fg, bg) >= 3) continue;
@@ -108,18 +130,18 @@
   }
   function resetContrast() {
     checked = new WeakSet();
-    document.querySelectorAll('[data-pmt-c]').forEach((el) => {
-      if (el.dataset.pmtFixed) {
-        const [val, prio] = el.dataset.pmtC.split('|');
-        if (val) el.style.setProperty('color', val, prio); else el.style.removeProperty('color');
-      }
-      if (el.dataset.pmtBg !== undefined) {
-        const [val, prio] = el.dataset.pmtBg.split('|');
-        if (val) el.style.setProperty('background-color', val, prio); else el.style.removeProperty('background-color');
-      }
+    const restore = (el, key, prop) => {
+      if (el.dataset[key] === undefined) return;
+      const [val, prio] = el.dataset[key].split('|');
+      if (val) el.style.setProperty(prop, val, prio); else el.style.removeProperty(prop);
+      delete el.dataset[key];
+    };
+    document.querySelectorAll('[data-pmt-c], [data-pmt-bg], [data-pmt-bgi]').forEach((el) => {
+      if (el.dataset.pmtFixed) restore(el, 'pmtC', 'color');
       delete el.dataset.pmtC;
       delete el.dataset.pmtFixed;
-      delete el.dataset.pmtBg;
+      restore(el, 'pmtBg', 'background-color');
+      restore(el, 'pmtBgi', 'background-image');
     });
   }
 

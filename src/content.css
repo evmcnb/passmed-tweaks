@@ -47,6 +47,9 @@ html.pmt-theme :is(input:not([type=checkbox]):not([type=radio]):not([type=color]
   border-color: var(--pmt-border) !important;
 }
 html.pmt-theme ::placeholder { color: var(--pmt-muted) !important; }
+/* checkboxes/radios: the site paints unchecked ones near-black in dark mode */
+html.pmt-theme .form-check-input:not(:checked) { background-color: var(--pmt-surface2) !important; border: 1.5px solid color-mix(in srgb, var(--pmt-text) 45%, var(--pmt-surface)) !important; }
+html.pmt-theme .form-check-input:checked { background-color: var(--pmt-accent) !important; border-color: var(--pmt-accent) !important; }
 
 html.pmt-theme :is(.btn-light, .btn-outline-secondary, .btn-secondary) {
   background-color: var(--pmt-surface2) !important;
