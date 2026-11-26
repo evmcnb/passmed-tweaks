@@ -65,23 +65,37 @@
     }
     return rgba(getComputedStyle(document.body).backgroundColor);
   }
+  // Every element is checked once (theme change starts over). Two kinds need a look:
+  //  - anything with its own opaque background (from inline styles OR the site's stylesheets), and
+  //  - anything that sets its own text colour (COLOURED).
+  // If its text is under 3:1 against what's behind it: a plain grey/white/black box loses its
+  // background (it was "page" chrome written for the other colour scheme); otherwise the text colour
+  // is nudged lighter/darker keeping its hue. Form controls, buttons and badges keep their background.
+  const SKIP_TAGS = new Set(['IMG', 'SVG', 'CANVAS', 'VIDEO', 'IFRAME', 'INPUT', 'TEXTAREA', 'SELECT', 'OPTION', 'SCRIPT', 'STYLE', 'BR', 'HR', 'PATH', 'USE']);
+  const KEEP_BG = '.btn, button, .badge, .form-control, .form-select, .progress, .progress-bar, .alert, [class*="-100"], .pmt-own';
+  const neutral = (c) => Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) < 24;
+  let checked = new WeakSet();
   function fixContrast() {
     if (!root.classList.contains('pmt-theme') || !document.body) return;
-    document.querySelectorAll(`:is(${COLOURED}):not([data-pmt-c])`).forEach((el) => {
-      if (el.closest('.pmt-own, #cap, svg')) return;
+    for (const el of document.body.getElementsByTagName('*')) {
+      if (checked.has(el)) continue;
+      checked.add(el);
+      if (SKIP_TAGS.has(el.tagName.toUpperCase()) || el.closest('.pmt-own, svg')) continue;
+      const cs = getComputedStyle(el);
+      const ownBg = rgba(cs.backgroundColor);
+      const hasBg = ownBg.a >= 0.5 && cs.backgroundImage === 'none';
+      if (!hasBg && !el.matches(COLOURED)) continue;
+      if (!el.textContent.trim()) continue;
+      const fg = rgba(cs.color);
+      let bg = hasBg ? ownBg : backdrop(el.parentElement);
+      if (fg.a < 0.3 || contrast(fg, bg) >= 3) continue;
       el.dataset.pmtC = el.style.getPropertyValue('color') + '|' + el.style.getPropertyPriority('color');
-      // dark themes: white/light-grey boxes are just "page" containers written for a white site;
-      // drop them (coloured highlights such as yellow are kept)
-      if (root.classList.contains('pmt-dark') && el.tagName !== 'IMG' && (el.style.background || el.style.backgroundColor || el.hasAttribute('bgcolor'))) {
-        const own = rgba(getComputedStyle(el).backgroundColor);
-        if (own.a >= 0.5 && relLum(own) > 0.8 && Math.max(own.r, own.g, own.b) - Math.min(own.r, own.g, own.b) < 24) {
-          el.dataset.pmtBg = el.style.getPropertyValue('background-color') + '|' + el.style.getPropertyPriority('background-color');
-          el.style.setProperty('background-color', 'transparent', 'important');
-        }
+      if (hasBg && neutral(ownBg) && !el.matches(KEEP_BG)) {
+        el.dataset.pmtBg = el.style.getPropertyValue('background-color') + '|' + el.style.getPropertyPriority('background-color');
+        el.style.setProperty('background-color', 'transparent', 'important');
+        bg = backdrop(el.parentElement);
+        if (contrast(fg, bg) >= 3) continue;
       }
-      if (!el.textContent.trim()) return;
-      const fg = rgba(getComputedStyle(el).color), bg = backdrop(el);
-      if (fg.a < 0.3 || contrast(fg, bg) >= 3) return;
       // keep the hue (red stays red): blend toward white on dark backdrops, black on light, until readable
       const to = relLum(bg) > 0.35 ? 0 : 255;
       let c = fg;
@@ -90,9 +104,10 @@
       }
       el.style.setProperty('color', `rgb(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)})`, 'important');
       el.dataset.pmtFixed = '1';
-    });
+    }
   }
   function resetContrast() {
+    checked = new WeakSet();
     document.querySelectorAll('[data-pmt-c]').forEach((el) => {
       if (el.dataset.pmtFixed) {
         const [val, prio] = el.dataset.pmtC.split('|');
@@ -189,8 +204,7 @@
     enhanceTables();
     fixContrast();
     enhanceReviewList();
-    const box = document.getElementById('div_discuss_question_content');
-    if (box) enhanceComments(box);
+    commentBoxes().forEach(enhanceComments);
   }
 
   // ---------- question insights ----------
@@ -646,7 +660,18 @@
   }
 
   // ---------- comments ----------
-  const isTop = (n) => n.nodeType === 1 && n.tagName === 'DIV' && /border-left/.test(n.getAttribute('style') || '');
+  // A top-level comment is a div with an inline left border that holds the site's vote buttons.
+  const isTop = (n) => n.nodeType === 1 && n.tagName === 'DIV' && /border-left/.test(n.getAttribute('style') || '') && !!n.querySelector('.rate-comment');
+  // Comment sections appear in the question's Discuss panel and on textbook pages (different containers),
+  // so find them by structure: the parent of top-level comment blocks.
+  function commentBoxes() {
+    const boxes = new Set();
+    document.querySelectorAll('div[style*="border-left"] .rate-comment').forEach((b) => {
+      const top = b.closest('div[style*="border-left"]');
+      if (top && isTop(top) && top.parentElement && !top.closest('.pmt-threads')) boxes.add(top.parentElement);
+    });
+    return boxes;
+  }
   const meta = (h6) => {
     const t = h6?.querySelector('i')?.textContent || '';
     const m = t.match(/^(.*?)\s*-\s*(\d{1,2} \w{3} \d{2})\s*$/);
@@ -679,7 +704,8 @@
     const nodes = [...box.childNodes];
     const first = nodes.findIndex(isTop);
     if (first < 0) return;
-    const me = (document.getElementById('Qnickname')?.value || '').trim().toLowerCase();
+    if (!box.classList.contains('pmt-cbox')) box.classList.add('pmt-cbox');
+    const me = (box.querySelector('input[id$="nickname" i]')?.value || document.getElementById('Qnickname')?.value || '').trim().toLowerCase();
     const list = h('div', { class: 'pmt-threads' });
     box.insertBefore(list, nodes[first]); // anchor before nodes get moved into threads
 
@@ -776,10 +802,12 @@
   document.addEventListener('keydown', (e) => {
     if (!S.comments || e.key !== 'Enter' || !(e.ctrlKey || e.metaKey)) return;
     const ta = e.target;
-    if (ta.id === 'Qnewqa') document.getElementById('Qsubmitnewqa')?.click();
-    else if (ta.classList?.contains('Qqaresponse')) {
-      ta.parentElement.querySelector(`.Qsubmitqaresponse[data-responseidlink="${ta.dataset.responseidlink}"]`)?.click();
-    } else return;
+    if (ta.tagName !== 'TEXTAREA' || !ta.closest('.pmt-cbox')) return;
+    // the site's submit button is the first <button> after the textarea (new comment and reply boxes alike)
+    let b = ta.nextElementSibling;
+    while (b && b.tagName !== 'BUTTON') b = b.nextElementSibling;
+    if (!b || !/submit/i.test(b.textContent)) return;
+    b.click();
     e.preventDefault();
   });
 
@@ -800,8 +828,7 @@
     for (const k in ch) S[k] = ch[k].newValue;
     apply();
     document.getElementById('pmt-insights')?.remove();
-    const box = document.getElementById('div_discuss_question_content');
-    if (box?.querySelector('.pmt-cbar')) applyCommentFilters(box);
+    document.querySelectorAll('.pmt-cbox').forEach(applyCommentFilters);
     schedule();
   });
 })();

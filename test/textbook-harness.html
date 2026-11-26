@@ -20,6 +20,8 @@
   .concept-1 { background-color: #ffebeb; } .concept-2 { background-color: #fff5c6; } .concept-3 { background-color: #e6ffc0; }
   .highlighted-notes { background-color: yellow; }
   .notes-title, .notes-heading { color: #1a9cce; }
+  /* textbook comment panel: light background from a class we can't see on the live page */
+  .notes-comments { background: #f8f9fa; padding: 12px; }
 </style>
 <link rel="stylesheet" href="../src/content.css">
 </head>
@@ -41,6 +43,13 @@
     <div class="imagetext">Image caption text</div>
     <p><span style="color:white">White text written for a dark banner.</span></p>
   </div>
+  <div class="notes-comments" id="notes_comments">
+    <div class="input-group input-group-sm"><span class="input-group-text">Display name</span><input type="text" class="form-control" id="Nnickname" value="VasoPlexy"></div>
+    <br><textarea id="Nnewqa" class="form-control" rows="3" placeholder="Submit a new comment..."></textarea> <button id="Nsubmitnewqa" class="btn btn-info btn-sm">Submit a new question/comment</button><br><br>
+    <div style="border-left: 4px solid #0DCAF0; padding-left:10px;margin-top:5px;margin-bottom:5px;padding-top:5px;">Paracetamol overdose is the commonest cause of acute liver failure in the UK.<br><h6 class="text-end"><button type="button" class="rate-comment btn btn-link" data-qaid="1" data-rating="1">+</button> <span id="comment_rating_1" style="font-weight: bold;">24</span> <button type="button" class="rate-comment btn btn-link" data-qaid="1" data-rating="0">-</button><span class="text-muted" style="font-size:0.9em"><i>LiverMoss - 12 Jan 24</i></span></h6></div><p style="padding-left:50px;"><br>And the prothrombin time is the best marker of synthetic function.<br></p><h6 class="text-end"><button type="button" class="rate-comment btn btn-link" data-qaid="2" data-rating="1">+</button> <span id="comment_rating_2" style="font-weight: bold;">7</span> <button type="button" class="rate-comment btn btn-link" data-qaid="2" data-rating="0">-</button><span class="text-muted" style="font-size:0.9em"><i>kdoc - 3 Mar 24</i></span></h6><p></p><p style="padding-left:50px;"><textarea class="Qqaresponse form-control" data-responseidlink="1" rows="2" placeholder="Reply to this question..."></textarea><button class="Qsubmitqaresponse btn btn-warning btn-sm" data-responseidlink="1">Submit reply</button><br></p><br>
+    <div style="border-left: 4px solid #0DCAF0; padding-left:10px;margin-top:5px;margin-bottom:5px;padding-top:5px;">Remember: albumin is a poor marker acutely.<br><h6 class="text-end"><button type="button" class="rate-comment btn btn-link" data-qaid="3" data-rating="1">+</button> <span id="comment_rating_3" style="font-weight: bold;">3</span> <button type="button" class="rate-comment btn btn-link" data-qaid="3" data-rating="0">-</button><span class="text-muted" style="font-size:0.9em"><i>Anonymous - 8 Aug 25</i></span></h6></div><p style="padding-left:50px;"><textarea class="Qqaresponse form-control" data-responseidlink="3" rows="2" placeholder="Reply to this question..."></textarea><button class="Qsubmitqaresponse btn btn-warning btn-sm" data-responseidlink="3">Submit reply</button><br></p><br>
+  </div>
+
 </div>
 <script>
 const theme = new URLSearchParams(location.search).get('theme') || 'midnight';
@@ -53,7 +62,7 @@ window.pmtReport = () => {
   const lum = (s) => { const m = s.match(/-?[\d.]+(e-?\d+)?/g).map(Number); if (s.startsWith('color(')) [0, 1, 2].forEach((i) => { m[i] *= 255; }); const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return { L: 0.2126 * f(m[0]) + 0.7152 * f(m[1]) + 0.0722 * f(m[2]), a: m[3] ?? 1 }; };
   const bgOf = (el) => { for (let n = el; n; n = n.parentElement) { const c = lum(getComputedStyle(n).backgroundColor); if (c.a >= 0.5) return c.L; } return 1; };
   const bad = [];
-  document.querySelectorAll('#passmedicinenotes *').forEach((el) => {
+  document.querySelectorAll('#main_container *').forEach((el) => {
     const own = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
     if (!own) return;
     const a = lum(getComputedStyle(el).color).L, b = bgOf(el);
