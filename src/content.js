@@ -72,7 +72,9 @@
   // background (it was "page" chrome written for the other colour scheme); otherwise the text colour
   // is nudged lighter/darker keeping its hue. Form controls, buttons and badges keep their background.
   const SKIP_TAGS = new Set(['IMG', 'SVG', 'CANVAS', 'VIDEO', 'IFRAME', 'INPUT', 'TEXTAREA', 'SELECT', 'OPTION', 'SCRIPT', 'STYLE', 'BR', 'HR', 'PATH', 'USE']);
-  const KEEP_BG = '.btn, button, .badge, .form-control, .form-select, .progress, .progress-bar, .alert, [class*="-100"], .pmt-own';
+  // (the site's pastel colour classes, e.g. pink-100, set their own dark text; NOT Bootstrap's w-100/h-100)
+  const KEEP_BG = '.btn, button, .badge, .form-control, .form-select, .progress, .progress-bar, .alert, .pmt-own, '
+    + '.blue-100, .indigo-100, .purple-100, .pink-100, .red-100, .orange-100, .yellow-100, .green-100, .teal-100, .cyan-100';
   const neutral = (c) => Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) < 24;
   let checked = new WeakSet();
   const save = (el, key, prop) => { if (el.dataset[key] === undefined) el.dataset[key] = el.style.getPropertyValue(prop) + '|' + el.style.getPropertyPriority(prop); };
@@ -93,6 +95,11 @@
         return v.a > 0.05 && relLum(v) > 0.55 ? `color-mix(in srgb, rgb(${Math.round(v.r)}, ${Math.round(v.g)}, ${Math.round(v.b)}) 30%, var(--pmt-surface))` : c;
       });
       if (img !== cs.backgroundImage) { save(el, 'pmtBgi', 'background-image'); el.style.setProperty('background-image', img, 'important'); }
+    }
+    // Progress bars drawn with images (e.g. greenbar.png, sized in %): can't recolour a PNG, so multiply
+    // it with the theme's card colour, which turns pale green/pink into dark green/pink. Icons use px sizes.
+    else if (cs.backgroundImage.includes('url(') && cs.backgroundSize.includes('%') && !el.classList.contains('pmt-blend')) {
+      el.classList.add('pmt-blend');
     }
   }
   function fixContrast() {
@@ -130,6 +137,7 @@
   }
   function resetContrast() {
     checked = new WeakSet();
+    document.querySelectorAll('.pmt-blend').forEach((el) => el.classList.remove('pmt-blend'));
     const restore = (el, key, prop) => {
       if (el.dataset[key] === undefined) return;
       const [val, prio] = el.dataset[key].split('|');
@@ -837,6 +845,8 @@
   const start = () => {
     new MutationObserver((muts) => {
       if (!muts.some((m) => !(m.target.nodeType === 1 ? m.target : m.target.parentElement)?.closest('.pmt-own'))) return;
+      // restyled after we looked (e.g. bars coloured by script after insertion): look again
+      for (const m of muts) if (m.type === 'attributes') checked.delete(m.target);
       if (onQuestionPage && S.coverTest) renderCover(qState().answered); // immediately, so new options never flash
       schedule();
     }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
